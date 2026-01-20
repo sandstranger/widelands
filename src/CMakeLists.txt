@@ -63,7 +63,19 @@ if (WIN32)
       widelands_ball_of_mud
       build_info
   )
-else()
+elseif (ANDROID)
+  wl_shared_library(widelands
+          SRCS
+          main.cc
+          DEPENDS
+          base
+          base_exceptions
+          base_time_string
+          logic_filesystem_constants
+          widelands_ball_of_mud
+          build_info
+  )
+else ()
   wl_binary(widelands
     SRCS
       main.cc

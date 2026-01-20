@@ -55,6 +55,13 @@
 #include "io/streamread.h"
 #include "io/streamwrite.h"
 
+#if ANDROID
+#include <filesystem>
+#include <regex>
+#include <string>
+#include <set>
+#endif
+
 struct FileSystemPath : public std::string {
 	bool exists_;
 	bool is_directory_;
@@ -122,7 +129,9 @@ FilenameSet RealFSImpl::list_directory(const std::string& path) const {
 	return results;
 #else
 	std::string buf;
+#ifndef ANDROID
 	glob_t gl;
+#endif
 	int32_t ofs;
 
 	if (!path.empty()) {
@@ -139,6 +148,7 @@ FilenameSet RealFSImpl::list_directory(const std::string& path) const {
 	}
 	std::set<std::string> results;
 
+#ifndef ANDROID
 	if (glob(buf.c_str(), 0, nullptr, &gl) != 0) {
 		return results;
 	}
@@ -149,6 +159,90 @@ FilenameSet RealFSImpl::list_directory(const std::string& path) const {
 	}
 
 	globfree(&gl);
+#else
+    std::string pattern = buf;
+    std::string dir;
+    std::string file_pattern;
+    auto pos = pattern.find_last_of("/\\");
+    if (pos == std::string::npos) {
+        dir = ".";
+        file_pattern = pattern;
+    } else {
+        dir = pattern.substr(0, pos);
+        file_pattern = pattern.substr(pos + 1);
+        if (dir.empty()) dir = "/";
+    }
+
+    bool recursive = (file_pattern.find("**") != std::string::npos);
+
+    auto wildcard_to_regex = [](const std::string &pat) {
+        std::string out;
+        out.reserve(pat.size() * 2);
+        for (size_t i = 0; i < pat.size(); ++i) {
+            char c = pat[i];
+            if (c == '*') {
+                // поддержка ** (мы уже проверили на recursive, но пусть будет безопасно)
+                if (i + 1 < pat.size() && pat[i + 1] == '*') {
+                    out += ".*";
+                    ++i;
+                } else {
+                    out += ".*";
+                }
+            } else if (c == '?') {
+                out += ".";
+            } else {
+                const std::string meta = R"(\^$.|+()[]{} )";
+                if (meta.find(c) != std::string::npos) {
+                    out.push_back('\\');
+                }
+                out.push_back(c);
+            }
+        }
+        return out;
+    };
+
+    std::string regex_str = "^" + wildcard_to_regex(file_pattern) + "$";
+    std::regex re;
+    try {
+        re = std::regex(regex_str, std::regex::ECMAScript);
+    } catch (const std::regex_error &e) {
+        return results;
+    }
+
+    namespace fs = std::filesystem;
+
+    try {
+        if (recursive) {
+            if (!fs::exists(dir)) return results;
+            for (auto &entry : fs::recursive_directory_iterator(dir)) {
+                if (!entry.is_regular_file()) continue;
+                const std::string name = entry.path().filename().string();
+                if (!std::regex_match(name, re)) continue;
+                std::string full = fs::canonical(entry.path()).string();
+                if (full.rfind(root_, 0) == 0 && full.size() > root_.size()) {
+                    results.insert(full.substr(root_.size() + 1));
+                } else {
+                    results.insert(full);
+                }
+            }
+        } else {
+            if (!fs::exists(dir)) return results;
+            for (auto &entry : fs::directory_iterator(dir)) {
+                if (!entry.is_regular_file()) continue;
+                const std::string name = entry.path().filename().string();
+                if (!std::regex_match(name, re)) continue;
+                std::string full = fs::canonical(entry.path()).string();
+                if (full.rfind(root_, 0) == 0 && full.size() > root_.size()) {
+                    results.insert(full.substr(root_.size() + 1));
+                } else {
+                    results.insert(full);
+                }
+            }
+        }
+    } catch (const fs::filesystem_error &e) {
+        return results;
+    }
+#endif
 
 	return results;
 #endif

@@ -1,3 +1,4 @@
+if (NOT ANDROID)
 # GNUInstallDirs requires CMake >= 3.0.2
 #include(GNUInstallDirs)
 
@@ -25,3 +26,4 @@ if (GTK_UPDATE_ICON_CACHE)
 else (GTK_UPDATE_ICON_CACHE)
   message(WARNING "gtk-update-icon-cache not found!")
 endif (GTK_UPDATE_ICON_CACHE)
+endif ()

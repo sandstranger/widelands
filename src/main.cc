@@ -47,6 +47,7 @@
 // Taken from https://stackoverflow.com/a/77336
 // TODO(Nordfriese): Implement this on Windows as well (see https://stackoverflow.com/a/26398082)
 static void segfault_handler(const int sig) {
+#ifndef ANDROID
 	constexpr int kMaxBacktraceSize = 256;
 	void* array[kMaxBacktraceSize];
 	size_t size = backtrace(array, kMaxBacktraceSize);
@@ -106,7 +107,7 @@ static void segfault_handler(const int sig) {
 		fclose(file);
 		std::cout << "The crash report was also saved to " << filename << std::endl << std::endl;
 	}
-
+#endif
 	::exit(sig);
 }
 #endif

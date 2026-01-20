@@ -18,6 +18,12 @@ option(USE_XDG "Follow XDG-Basedir specification" ON) # Enabled by default
 
 set(CMAKE_FIND_FRAMEWORK LAST)
 
+if (ANDROID)
+  include_directories(PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/minizip
+          ${GLBINDING_INCLUDES} ${asio_location} ${PNG_INCLUDE_DIRS})
+endif ()
+
 # Absolute path reference for submodules
 set(WL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -170,6 +176,7 @@ if (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
   endif()
 endif (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
 
+if (NOT ANDROID)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(WL_DEBUG_FLAGS "-DDEBUG")
   if(NOT MSVC)
@@ -202,6 +209,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "None")
 else()
   message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 endif()
+endif ()
 
 if(OPTION_TSAN)
   message(STATUS "Using ThreadSanitizer https://clang.llvm.org/docs/ThreadSanitizer.html")
@@ -387,6 +395,7 @@ if(NOT MSVC)
   wl_add_flag(WL_GENERIC_C_LIBRARY_FLAGS "-std=c11")
 endif()
 
+if (NOT ANDROID)
 # Cross-compile-unit optimization slows linking significantly.
 # Therefore, impatient user may want to prevent that.
 if(USE_FLTO_IF_AVAILABLE STREQUAL "yes")
@@ -413,6 +422,7 @@ if((CMAKE_BUILD_TYPE STREQUAL "Release") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithD
   endif(CMAKE_SYSTEM MATCHES "Linux")
 endif((CMAKE_BUILD_TYPE STREQUAL "Release") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
 endif(USE_FLTO_IF_AVAILABLE STREQUAL  "yes")
+endif ()
 
 IF (WIN32)
   add_definitions(-D_WIN32_WINNT=0x0601)
