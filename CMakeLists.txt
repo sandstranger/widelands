@@ -209,6 +209,8 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "None")
 else()
   message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 endif()
+else ()
+  set(WL_OPTIMIZE_FLAGS "-Os")
 endif ()
 
 if(OPTION_TSAN)
