@@ -33,8 +33,8 @@ foreach(custom_include_dir ${custom_include_directories})
   endif()
 endforeach()
 
-#include("${CMAKE_SOURCE_DIR}/cmake/UseSystemInfo.cmake")
-include("${CMAKE_SOURCE_DIR}/cmake/WlFunctions.cmake")
+#include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseSystemInfo.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/WlFunctions.cmake")
 
 IF(USE_XDG AND NOT APPLE AND NOT WIN32)
   ADD_DEFINITIONS(-DUSE_XDG)
@@ -122,16 +122,18 @@ find_package(OpenGL REQUIRED)
 find_package(PNG 1.6 REQUIRED)
 
 find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
+if (NOT ANDROID)
+  find_package(SDL2_image REQUIRED)
+  find_package(ICU REQUIRED COMPONENTS uc dt)
+  if(OPTION_USE_GLBINDING)
+    find_package(glbinding REQUIRED)
+  else()
+    find_package(GLEW REQUIRED)
+  endif()
+endif ()
 find_package(SDL2_mixer REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(ZLIB REQUIRED)
-find_package(ICU REQUIRED COMPONENTS uc dt)
-if(OPTION_USE_GLBINDING)
-  find_package(glbinding REQUIRED)
-else()
-  find_package(GLEW REQUIRED)
-endif()
 
 # Check that Asio is installed. Asio does not have (or need) a Find… CMake Module, so we "only" need to check if the header exists.
 if(NOT asio_location OR asio_location STREQUAL "")
@@ -233,9 +235,13 @@ if(OPTION_ASAN AND OPTION_TSAN)
 endif()
 
 # This is set to avoid linker errors when using GLVND-libs on Linux
-if("${OpenGL_GL_PREFERENCE}" STREQUAL "GLVND")
-   link_libraries(OpenGL::GL)
-   add_compile_definitions(WL_USE_GLVND)
+if("${OpenGL_GL_PREFERENCE}" STREQUAL "GLVND" OR ANDROID)
+  if (ANDROID)
+   link_libraries(${OPENGL_opengl_LIBRARY})
+  else ()
+    link_libraries(OpenGL::GL)
+  endif ()
+  add_compile_definitions(WL_USE_GLVND)
    message(STATUS "Adding linker flags for GLVND.")
 endif()
 
@@ -481,7 +487,7 @@ endif (CMAKE_SYSTEM_NAME MATCHES "FreeBSD" OR
        CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
 
 if (NOT DEFINED WL_VERSION)
-  include (${CMAKE_SOURCE_DIR}/cmake/BzrRevision.cmake)
+  include (${CMAKE_CURRENT_SOURCE_DIR}/cmake/BzrRevision.cmake)
 else (NOT DEFINED WL_VERSION)
   add_custom_target (
     InputRevision ALL

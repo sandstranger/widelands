@@ -2,23 +2,32 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINAR
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/build_info.cc.cmake ${CMAKE_CURRENT_BINARY_DIR}/build_info.cc)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/../cmake/datadirversion.cmake ${CMAKE_CURRENT_SOURCE_DIR}/../data/datadirversion)
 
-# Catchall target to codecheck all files.
 add_custom_target(codecheck)
-add_custom_target(run_build_deps
+
+if (NOT ANDROID)
+  # Catchall target to codecheck all files.
+  add_custom_target(codecheck)
+  add_custom_target(run_build_deps
   COMMAND
     ${Python3_EXECUTABLE}
     ${CMAKE_SOURCE_DIR}/utils/build_deps.py
   COMMENT "Checking CMakeLists.txt files."
 )
-add_dependencies(codecheck run_build_deps)
+  add_dependencies(codecheck run_build_deps)
+endif ()
 
 # A target that depends on all unit tests as 'make test' will not rebuild
 # tests:
 # https://stackoverflow.com/questions/733475/cmake-ctest-make-test-doesnt-build-tests
 add_custom_target(wl_tests)
 
-#include macro _include_directories
-include (${CMAKE_SOURCE_DIR}/cmake/IncludeDirectories.cmake)
+if (ANDROID)
+  #include macro _include_directories
+  include (${CMAKE_CURRENT_SOURCE_DIR}/../cmake/IncludeDirectories.cmake)
+else ()
+  #include macro _include_directories
+  include (${CMAKE_SOURCE_DIR}/cmake/IncludeDirectories.cmake)
+endif ()
 
 wl_library(build_info
   SRCS

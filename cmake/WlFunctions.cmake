@@ -1,34 +1,34 @@
 # Utilize cmake_parse_arguments standard function to parse for common arguments.
 macro(_parse_common_args ARGS)
   set(OPTIONS
-    THIRD_PARTY  # Is a third party lib. Less warnings, no codecheck.
-    THIRD_PARTY_WITH_INCLUDES
-    C_LIBRARY # Pure C library. No CXX flags.
-    WIN32 # Windows binary/library.
-    USES_ATOMIC
-    USES_ICU
-    USES_MINIZIP
-    USES_OPENGL
-    USES_PNG
-    USES_SDL2
-    USES_SDL2_IMAGE
-    USES_SDL2_MIXER
-    USES_SDL2_TTF
-    USES_STD_FS
-    USES_TINYGETTEXT
-    USES_ZLIB
+          THIRD_PARTY  # Is a third party lib. Less warnings, no codecheck.
+          THIRD_PARTY_WITH_INCLUDES
+          C_LIBRARY # Pure C library. No CXX flags.
+          WIN32 # Windows binary/library.
+          USES_ATOMIC
+          USES_ICU
+          USES_MINIZIP
+          USES_OPENGL
+          USES_PNG
+          USES_SDL2
+          USES_SDL2_IMAGE
+          USES_SDL2_MIXER
+          USES_SDL2_TTF
+          USES_STD_FS
+          USES_TINYGETTEXT
+          USES_ZLIB
   )
   set(ONE_VALUE_ARG )
   set(MULTI_VALUE_ARGS SRCS DEPENDS)
   cmake_parse_arguments(ARG "${OPTIONS}" "${ONE_VALUE_ARG}" "${MULTI_VALUE_ARGS}"
-    ${ARGS}
+          ${ARGS}
   )
 endmacro(_parse_common_args)
 
 # Set variable VAR to VALUE if it is not set or empty. Does nothing if already set.
 macro(wl_set_if_unset VAR VALUE)
   if (NOT ${VAR} OR ${VAR} STREQUAL "")
-	  set (${VAR} ${VALUE})
+    set (${VAR} ${VALUE})
   endif()
 endmacro(wl_set_if_unset)
 
@@ -46,13 +46,13 @@ endfunction(wl_include_system_directories TARGET DIR)
 
 # Search the given libraries and write their paths into VAR_NAME.
 function(wl_add_static_libs VAR_NAME)
-    set(STATIC_LIBS ${${VAR_NAME}})
-    foreach(LIB IN ITEMS ${ARGN})
-        find_library(${LIB}_STATIC NAMES ${LIB} REQUIRED)
-        list(APPEND STATIC_LIBS ${${LIB}_STATIC})
-    endforeach()
-    # Make it known to caller
-    set(${VAR_NAME} ${STATIC_LIBS} PARENT_SCOPE)
+  set(STATIC_LIBS ${${VAR_NAME}})
+  foreach(LIB IN ITEMS ${ARGN})
+    find_library(${LIB}_STATIC NAMES ${LIB} REQUIRED)
+    list(APPEND STATIC_LIBS ${${LIB}_STATIC})
+  endforeach()
+  # Make it known to caller
+  set(${VAR_NAME} ${STATIC_LIBS} PARENT_SCOPE)
 endfunction()
 
 # Add common compile tasks, like includes and libraries to link against for third party
@@ -107,17 +107,17 @@ macro(_common_compile_tasks)
   endif()
 
   if(ARG_USES_MINIZIP)
-      if(MINIZIP_STATIC_LIBRARIES)
-          target_link_libraries(${NAME} ${MINIZIP_LINK_LIBRARIES})
-          message(STATUS "Link ${NAME} with ${MINIZIP_LINK_LIBRARIES}")
-      else()
-          target_link_libraries(${NAME} third_party_minizip)
-          message(STATUS "Link ${NAME} with third_party_minizip")
-      endif()
+    if(MINIZIP_STATIC_LIBRARIES)
+      target_link_libraries(${NAME} ${MINIZIP_LINK_LIBRARIES})
+      message(STATUS "Link ${NAME} with ${MINIZIP_LINK_LIBRARIES}")
+    else()
+      target_link_libraries(${NAME} third_party_minizip)
+      message(STATUS "Link ${NAME} with third_party_minizip")
+    endif()
   endif()
 
   if(ARG_USES_ATOMIC AND CMAKE_SYSTEM MATCHES "Linux"
-     AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
+          AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
     # clang on linux needs explicit linkage against standard library atomic
     target_link_libraries(${NAME} atomic)
   endif()
@@ -138,7 +138,7 @@ macro(_common_compile_tasks)
     if(OPTION_USE_GLBINDING)
       # Early versions of glbinding defined GLBINDING_INCLUDES, newer use
       # cmake's module system.
-      if(DEFINED GLBINDING_INCLUDES)
+      if(DEFINED GLBINDING_INCLUDES OR ANDROID)
         wl_include_system_directories(${NAME} ${GLBINDING_INCLUDES})
         target_link_libraries(${NAME} ${GLBINDING_LIBRARIES})
       else()
@@ -151,46 +151,80 @@ macro(_common_compile_tasks)
         target_link_libraries(${NAME} GLEW::GLEW)
       endif()
     endif()
-    target_link_libraries(${NAME} OpenGL::GL)
-  endif()
+    if (ANDROID)
+      target_link_libraries(${NAME} ${OPENGL_opengl_LIBRARY})
+    else ()
+      target_link_libraries(${NAME} OpenGL::GL)
+    endif()
+endif ()
 
   if(ARG_USES_PNG)
-    target_link_libraries(${NAME} PNG::PNG)
-  endif()
+      if (ANDROID)
+        wl_include_system_directories(${NAME} ${PNG_INCLUDE_DIRS})
+        target_link_libraries(${NAME} ${PNG_LIBRARY})
+      else ()
+        target_link_libraries(${NAME} PNG::PNG)
+      endif ()
+    endif()
 
-  if(ARG_USES_SDL2)
-    target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} SDL2::Main ${SDL_STATIC_LIBS})
-  endif()
+    if(ARG_USES_SDL2)
+      if (ANDROID)
+        wl_include_system_directories(${NAME} ${SDL2_INCLUDE_DIR})
+        target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} ${SDL2_LIBRARY})
+      else ()
+        target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} SDL2::Main ${SDL_STATIC_LIBS})
+      endif ()
+    endif()
 
-  if(ARG_USES_SDL2_MIXER)
-    target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} SDL2::Mixer ${SDL_MIXER_STATIC_LIBS})
-  endif()
+    if(ARG_USES_SDL2_MIXER)
+      if (ANDROID)
+        wl_include_system_directories(${NAME} ${SDL2_MIXER_INCLUDE_DIR})
+        target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} ${SDL2_MIXER_LIBRARY})
+      else ()
+        target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} SDL2::Mixer ${SDL_MIXER_STATIC_LIBS})
+      endif ()
+    endif()
 
-  if(ARG_USES_SDL2_IMAGE)
-    target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} SDL2::Image ${SDL_IMG_STATIC_LIBS})
-  endif()
+    if(ARG_USES_SDL2_IMAGE)
+      if (ANDROID)
+        wl_include_system_directories(${NAME} ${SDL2_IMAGE_INCLUDE_DIRS})
+        target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} ${SDL2_IMAGE_LIBRARIES})
+      else ()
+        target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} SDL2::Image ${SDL_IMG_STATIC_LIBS})
+      endif ()
+    endif()
 
-  if(ARG_USES_SDL2_TTF)
-    target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} SDL2::TTF ${SDL_TTF_STATIC_LIBS})
-  endif()
+    if(ARG_USES_SDL2_TTF)
+      if (ANDROID)
+        wl_include_system_directories(${NAME} ${SDL2_TTF_INCLUDE_DIR})
+        target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} ${SDL2_TTF_LIBRARY})
+      else ()
+        target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} SDL2::TTF ${SDL_TTF_STATIC_LIBS})
+      endif ()
+    endif()
 
-  if(ARG_USES_STD_FS)
-    if(NEEDS_EXTERNAL_FILESYSTEM)
-      target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} stdc++fs)
-    endif(NEEDS_EXTERNAL_FILESYSTEM)
-  endif()
+    if(ARG_USES_STD_FS)
+      if(NEEDS_EXTERNAL_FILESYSTEM)
+        target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} stdc++fs)
+      endif(NEEDS_EXTERNAL_FILESYSTEM)
+    endif()
 
-  if(ARG_USES_TINYGETTEXT)
-    target_link_libraries(${NAME} tinygettext)
-  endif()
+    if(ARG_USES_TINYGETTEXT)
+      target_link_libraries(${NAME} tinygettext)
+    endif()
 
-  if(ARG_USES_ICU)
-    target_link_libraries(${NAME} ICU::uc ICU::dt)
-  endif()
+    if(ARG_USES_ICU)
+      if (ANDROID)
+        wl_include_system_directories(${NAME} ${ICU_INCLUDE_DIR})
+        target_link_libraries(${NAME} ${ICU_LIBRARIES})
+      else ()
+        target_link_libraries(${NAME} ICU::uc ICU::dt)
+      endif ()
+    endif()
 
-  foreach(DEPENDENCY ${ARG_DEPENDS})
-    target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} ${DEPENDENCY})
-  endforeach(DEPENDENCY)
+    foreach(DEPENDENCY ${ARG_DEPENDS})
+      target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} ${DEPENDENCY})
+    endforeach(DEPENDENCY)
 endmacro(_common_compile_tasks)
 
 # Common library target definition.
@@ -198,9 +232,9 @@ function(wl_library NAME)
   _parse_common_args("${ARGN}")
 
   add_library(${NAME}
-    STATIC
-    EXCLUDE_FROM_ALL
-    ${ARG_SRCS}
+          STATIC
+          EXCLUDE_FROM_ALL
+          ${ARG_SRCS}
   )
 
   # increase the tries for the linker searching for cyclic dependencies
@@ -246,24 +280,24 @@ function(wl_run_codecheck NAME SRC)
 
     set(OUTPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/codecheck_${CHECKSUM}")
     add_custom_command(
-      OUTPUT
-        ${OUTPUT_FILE}
-      COMMAND
-        ${CMAKE_COMMAND}
-        -DPython3_EXECUTABLE=${Python3_EXECUTABLE}
-        -DWL_SOURCE_CHECKER=${CMAKE_SOURCE_DIR}/cmake/codecheck/CodeCheck.py
-        -DSRC=${ABSOLUTE_SRC}
-        -DOUTPUT_FILE=${OUTPUT_FILE}
-        -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
-        -DWL_ROOT_DIR=${WL_ROOT_DIR}
-        -P ${CMAKE_SOURCE_DIR}/cmake/codecheck/CodeCheck.cmake
-      DEPENDS ${ABSOLUTE_SRC}
-      COMMENT "Checking ${SRC} with CodeCheck"
+            OUTPUT
+            ${OUTPUT_FILE}
+            COMMAND
+            ${CMAKE_COMMAND}
+            -DPython3_EXECUTABLE=${Python3_EXECUTABLE}
+            -DWL_SOURCE_CHECKER=${CMAKE_SOURCE_DIR}/cmake/codecheck/CodeCheck.py
+            -DSRC=${ABSOLUTE_SRC}
+            -DOUTPUT_FILE=${OUTPUT_FILE}
+            -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            -DWL_ROOT_DIR=${WL_ROOT_DIR}
+            -P ${CMAKE_SOURCE_DIR}/cmake/codecheck/CodeCheck.cmake
+            DEPENDS ${ABSOLUTE_SRC}
+            COMMENT "Checking ${SRC} with CodeCheck"
     )
     add_custom_target(
-      see_if_codecheck_needs_to_run_${CHECKSUM}
-      DEPENDS ${OUTPUT_FILE}
-      COMMENT ""
+            see_if_codecheck_needs_to_run_${CHECKSUM}
+            DEPENDS ${OUTPUT_FILE}
+            COMMENT ""
     )
 
     add_dependencies(codecheck see_if_codecheck_needs_to_run_${CHECKSUM})
@@ -291,12 +325,12 @@ function(wl_binary NAME)
 
   if (ARG_WIN32)
     add_executable(${NAME}
-      WIN32
-      ${ARG_SRCS}
+            WIN32
+            ${ARG_SRCS}
     )
   else()
     add_executable(${NAME}
-      ${ARG_SRCS}
+            ${ARG_SRCS}
     )
   endif()
 
