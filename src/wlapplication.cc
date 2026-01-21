@@ -94,6 +94,12 @@
 #include "wui/interactive_spectator.h"
 #include "wui/maptable.h"
 
+#if ANDROID
+using namespace std;
+extern string g_pathToRootUserFolder;
+extern string g_pathToDataFolder;
+#endif
+
 std::string get_executable_directory(const bool logdir) {
 	std::string executabledir;
 #ifdef __APPLE__
@@ -107,7 +113,7 @@ std::string get_executable_directory(const bool logdir) {
 	executabledir = std::string(buffer.get());
 	executabledir.resize(executabledir.rfind('/') + 1);
 #endif
-#ifdef __linux__
+#if __linux__ && !ANDROID
 	char buffer[PATH_MAX];
 	size_t size = readlink("/proc/self/exe", buffer, PATH_MAX);
 	if (size <= 0) {
@@ -115,6 +121,9 @@ std::string get_executable_directory(const bool logdir) {
 	}
 	executabledir = std::string(buffer, size);
 	executabledir.resize(executabledir.rfind('/') + 1);
+#endif
+#if ANDROID
+    executabledir = g_pathToRootUserFolder;
 #endif
 #ifdef _WIN32
 	char filename[_MAX_PATH + 1] = {0};
@@ -1692,6 +1701,7 @@ void WLApplication::handle_commandline_parameters() {
 	} else {
 		std::vector<std::pair<std::string, std::string>> wrong_candidates;
 
+#ifndef ANDROID
 		// Try absolute path first.
 		if (is_absolute_path(INSTALL_DATADIR)) {
 			datadir_ = INSTALL_DATADIR;
@@ -1702,6 +1712,15 @@ void WLApplication::handle_commandline_parameters() {
 				wrong_candidates.emplace_back(datadir_, err);
 			}
 		}
+#else
+        datadir_ = g_pathToDataFolder;
+        const std::string err = checkdatadirversion(datadir_);
+        if (err.empty()) {
+            found_datadir = true;
+        } else {
+            wrong_candidates.emplace_back(datadir_, err);
+        }
+#endif
 
 		// Next, pick the first applicable XDG path.
 #ifdef USE_XDG
@@ -1724,7 +1743,11 @@ void WLApplication::handle_commandline_parameters() {
 
 		// Finally, try a relative datadir.
 		if (!found_datadir) {
+#ifndef ANDROID
 			datadir_ = get_executable_directory() + FileSystem::file_separator() + INSTALL_DATADIR;
+#else
+            datadir_ = g_pathToDataFolder;
+#endif
 			const std::string err = checkdatadirversion(datadir_);
 			if (err.empty()) {
 				found_datadir = true;
