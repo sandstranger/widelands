@@ -22,6 +22,7 @@ if (ANDROID)
   include_directories(PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
           ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/minizip
           ${GLBINDING_INCLUDES} ${asio_location} ${PNG_INCLUDE_DIRS})
+  add_compile_definitions(U_STATIC_IMPLEMENTATION)
 endif ()
 
 # Absolute path reference for submodules

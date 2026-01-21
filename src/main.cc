@@ -43,6 +43,18 @@
 #include "wlapplication.h"
 #include "wlapplication_messages.h"
 
+#if ANDROID
+#include "SDL_main.h"
+#include <string>
+#endif
+
+#if ANDROID
+using namespace std;
+
+string g_pathToRootUserFolder;
+string g_pathToDataFolder;
+#endif
+
 #ifdef PRINT_SEGFAULT_BACKTRACE
 // Taken from https://stackoverflow.com/a/77336
 // TODO(Nordfriese): Implement this on Windows as well (see https://stackoverflow.com/a/26398082)
@@ -115,8 +127,16 @@ static void segfault_handler(const int sig) {
 /**
  * Cross-platform entry point for SDL applications.
  */
+#if ANDROID
+int SDL_main(int argc, char **argv) {
+#else
 int main(int argc, char* argv[]) {
+#endif
 	std::cout << "This is Widelands version " << build_ver_details() << std::endl;
+
+#if ANDROID
+    chdir(g_pathToRootUserFolder.c_str());
+#endif
 
 #ifdef PRINT_SEGFAULT_BACKTRACE
 	/* Handle several types of fatal crashes with a useful backtrace on supporting systems.
@@ -165,3 +185,33 @@ int main(int argc, char* argv[]) {
 	}
 #endif
 }
+
+#if ANDROID
+extern "C"{
+__attribute__((used)) __attribute__((visibility("default")))
+void onNativeResume() {
+}
+__attribute__((used)) __attribute__((visibility("default")))
+void onNativePause() {
+}
+__attribute__((used)) __attribute__((visibility("default")))
+bool needToShowScreenControls() {
+    return true;
+}
+
+__attribute__((used)) __attribute__((visibility("default")))
+bool needToInvokeMouseButtonsEvents(){
+    return true;
+}
+
+__attribute__((used)) __attribute__((visibility("default")))
+void setPathsToResources (const char *pathToRootUserFolder, const char *pathToDataFolder) {
+    g_pathToRootUserFolder = pathToRootUserFolder;
+    g_pathToDataFolder = pathToDataFolder;
+}
+
+__attribute__((used)) __attribute__((visibility("default")))
+void setPathToSDLControllerDB (const char *pathToSDLControllerDB){
+}
+}
+#endif
