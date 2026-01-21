@@ -40,6 +40,10 @@
 #include "build_info.h"
 #endif
 
+#if ANDROID
+#include "android/log.h"
+#endif
+
 namespace {
 
 // Forward declaration to work around cyclic dependency.
@@ -172,6 +176,7 @@ static const char* to_string(const LogType& type) {
 	}
 }
 
+#ifndef ANDROID
 void do_log(const LogType type, const Time& gametime, const char* const fmt, ...) {
 	MutexLock m(MutexLock::ID::kLog);
 	assert(logger != nullptr);
@@ -208,3 +213,57 @@ void do_log(const LogType type, const Time& gametime, const char* const fmt, ...
 		logger->log_cstring(str.c_str());
 	}
 }
+#else
+int to_android_log_priority(LogType type) {
+    switch (type) {
+        case LogType::kInfo:    return ANDROID_LOG_INFO;
+        case LogType::kDebug:   return ANDROID_LOG_DEBUG;
+        case LogType::kLua:     return ANDROID_LOG_DEBUG;
+        case LogType::kWarning: return ANDROID_LOG_WARN;
+        case LogType::kError:   return ANDROID_LOG_ERROR;
+    }
+    return ANDROID_LOG_UNKNOWN;
+}
+
+static void split_lines(const std::string& str, std::vector<std::string>& out) {
+    size_t start = 0;
+    size_t pos;
+    while ((pos = str.find('\n', start)) != std::string::npos) {
+        out.emplace_back(str.substr(start, pos - start));
+        start = pos + 1;
+    }
+    if (start < str.size())
+        out.emplace_back(str.substr(start));
+}
+
+void do_log(const LogType type, const Time& gametime, const char* fmt, ...) {
+    constexpr const char* TAG = "MyGame";
+    char buffer_prefix[256];
+    uint32_t t = gametime.is_valid() ? gametime.get() : SDL_GetTicks();
+    const uint32_t hours = t / (1000 * 60 * 60);
+    t -= hours * 1000 * 60 * 60;
+    const uint32_t minutes = t / (1000 * 60);
+    t -= minutes * 1000 * 60;
+    const uint32_t seconds = t / 1000;
+    t -= seconds * 1000;
+    snprintf(buffer_prefix, sizeof(buffer_prefix),
+             "[%02u:%02u:%02u.%03u %s] %s: ",
+             hours, minutes, seconds, t,
+             gametime.is_invalid() ? "real" : "game",
+             to_string(type));
+
+    char buffer[2048];
+    va_list va;
+    va_start(va, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, va);
+    va_end(va);
+
+    std::vector<std::string> lines;
+    split_lines(buffer, lines);
+    for (auto& line : lines) {
+        if (line.find_first_not_of(' ') == std::string::npos) continue;
+        std::string full_line = std::string(buffer_prefix) + line;
+        __android_log_print(to_android_log_priority(type), TAG, "%s", full_line.c_str());
+    }
+}
+#endif

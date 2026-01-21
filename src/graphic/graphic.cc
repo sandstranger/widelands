@@ -54,6 +54,7 @@ namespace {
 
 // Sets the icon for the application.
 void set_icon(SDL_Window* sdl_window) {
+#ifndef ANDROID
 #ifndef _WIN32
 	const std::string icon_name = "images/logos/wl-ico-128.png";
 #else
@@ -62,6 +63,7 @@ void set_icon(SDL_Window* sdl_window) {
 	SDL_Surface* s = load_image_as_sdl_surface(icon_name, g_fs);
 	SDL_SetWindowIcon(sdl_window, s);
 	SDL_FreeSurface(s);
+#endif
 }
 
 }  // namespace
@@ -103,13 +105,17 @@ void Graphic::initialize(const TraceGl& trace_gl,
 	}
 
 	uint32_t window_flags = SDL_WINDOW_OPENGL;
+#ifndef ANDROID
 #ifdef RESIZABLE_WINDOW
 	window_flags |= SDL_WINDOW_RESIZABLE;
 #endif
 	sdl_window_ = SDL_CreateWindow("Widelands Window", window_x, window_y, window_mode_width_,
 	                               window_mode_height_, window_flags);
 	SDL_SetWindowMinimumSize(sdl_window_, kMinimumResolutionW, kMinimumResolutionH);
-
+#else
+    window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    sdl_window_ = SDL_CreateWindow("Widelands Window", 0, 0, 0,0, window_flags);
+#endif
 	GLint max;
 	// LeakSanitizer reports a memory leak which is triggered somewhere in this function call,
 	// probably coming from the gaphics drivers
@@ -118,11 +124,13 @@ void Graphic::initialize(const TraceGl& trace_gl,
 
 	max_texture_size_ = static_cast<int>(max);
 
+#ifndef ANDROID
 	set_fullscreen(init_fullscreen);
 	if (init_maximized) {
 		set_maximized(true);
 	}
-	resolution_changed();
+#endif
+    resolution_changed();
 
 	SDL_SetWindowTitle(sdl_window_, ("Widelands " + build_ver_details()).c_str());
 	set_icon(sdl_window_);
@@ -216,6 +224,7 @@ int Graphic::get_window_mode_yres() const {
 }
 
 void Graphic::change_resolution(int w, int h, bool resize_window) {
+#ifndef ANDROID
 	window_mode_width_ = w;
 	window_mode_height_ = h;
 
@@ -224,9 +233,11 @@ void Graphic::change_resolution(int w, int h, bool resize_window) {
 	}
 
 	resolution_changed();
+#endif
 }
 
 void Graphic::set_window_size(int w, int h) {
+#ifndef ANDROID
 	// Calling SDL_SetWindowSize() when the window is resizable or maximized can sometimes cause
 	// SDL (and consequently us) to lose track of the real window size, causing nasty glitches.
 	// To work around this we temporarily set the window as not resizable. It's set back to
@@ -238,6 +249,7 @@ void Graphic::set_window_size(int w, int h) {
 	}
 
 	SDL_SetWindowSize(sdl_window_, w, h);
+#endif
 }
 
 void Graphic::resolution_changed() {
@@ -291,6 +303,7 @@ bool Graphic::maximized() const {
 }
 
 void Graphic::set_maximized(const bool to_maximize, int to_display) {
+#ifndef ANDROID
 	window_mode_maximized_ = to_maximize;
 	int display = get_display();
 	if (to_display < 0) {
@@ -312,15 +325,21 @@ void Graphic::set_maximized(const bool to_maximize, int to_display) {
 		SDL_SetWindowResizable(sdl_window_, SDL_FALSE);
 		SDL_RestoreWindow(sdl_window_);
 	}
+#endif
 }
 
 bool Graphic::fullscreen() const {
+#ifndef ANDROID
 	uint32_t flags = SDL_GetWindowFlags(sdl_window_);
 	return ((flags & SDL_WINDOW_FULLSCREEN) != 0u) ||
 	       ((flags & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0u);
+#else
+    return true;
+#endif
 }
 
 void Graphic::set_fullscreen(const bool value, int to_display) {
+#ifndef ANDROID
 	int display = get_display();
 	if (to_display < 0) {
 		to_display = display;
@@ -347,6 +366,7 @@ void Graphic::set_fullscreen(const bool value, int to_display) {
 		SDL_SetWindowFullscreen(sdl_window_, 0);
 	}
 	resolution_changed();
+#endif
 }
 
 /**

@@ -28,6 +28,17 @@
 #include "base/macros.h"
 #include "graphic/gl/utils.h"
 #include "graphic/text/bidi.h"
+#if ANDROID
+#include "SDL_log.h"
+static bool g_useGLES2_0 = false;
+
+extern "C" {
+__attribute__((used)) __attribute__((visibility("default")))
+void setUseGLES2_0State(const bool useGLES2_0) {
+    g_useGLES2_0 = useGLES2_0;
+}
+}
+#endif
 
 namespace Gl {
 
@@ -41,8 +52,16 @@ SDL_GLContext initialize(
    GLint* max_texture_size) {
 	// Request an OpenGL 2 context with double buffering.
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+#ifndef ANDROID
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#else
+    SDL_Log(g_useGLES2_0 ? "Legacy OpenGL ES 2.0 is using for rendering" :
+            "OpenGL ES 3.2 is using for rendering");
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, g_useGLES2_0 ? 2 : 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, g_useGLES2_0 ? 0 : 2);
+#endif
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 

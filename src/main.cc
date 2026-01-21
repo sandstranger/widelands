@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
     chdir(g_pathToRootUserFolder.c_str());
 #endif
 
-#ifdef PRINT_SEGFAULT_BACKTRACE
+#if PRINT_SEGFAULT_BACKTRACE && !ANDROID
 	/* Handle several types of fatal crashes with a useful backtrace on supporting systems.
 	 * We can't handle SIGABRT like this since we have to redirect that one elsewhere to
 	 * suppress non-critical errors from Eris.
@@ -202,6 +202,11 @@ bool needToShowScreenControls() {
 __attribute__((used)) __attribute__((visibility("default")))
 bool needToInvokeMouseButtonsEvents(){
     return true;
+}
+
+__attribute__((used)) __attribute__((visibility("default")))
+bool needToReInitGameControllers (){
+    return false;
 }
 
 __attribute__((used)) __attribute__((visibility("default")))

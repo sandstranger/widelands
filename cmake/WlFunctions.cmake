@@ -222,7 +222,11 @@ endif ()
       endif ()
     endif()
 
-    foreach(DEPENDENCY ${ARG_DEPENDS})
+    if (ANDROID)
+      target_link_libraries(${NAME} log)
+    endif ()
+
+  foreach(DEPENDENCY ${ARG_DEPENDS})
       target_link_libraries(${NAME} ${TARGET_LINK_FLAGS} ${DEPENDENCY})
     endforeach(DEPENDENCY)
 endmacro(_common_compile_tasks)
