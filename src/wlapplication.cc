@@ -1714,12 +1714,7 @@ void WLApplication::handle_commandline_parameters() {
 		}
 #else
         datadir_ = g_pathToDataFolder;
-        const std::string err = checkdatadirversion(datadir_);
-        if (err.empty()) {
-            found_datadir = true;
-        } else {
-            wrong_candidates.emplace_back(datadir_, err);
-        }
+        found_datadir = true;
 #endif
 
 		// Next, pick the first applicable XDG path.
@@ -1745,15 +1740,16 @@ void WLApplication::handle_commandline_parameters() {
 		if (!found_datadir) {
 #ifndef ANDROID
 			datadir_ = get_executable_directory() + FileSystem::file_separator() + INSTALL_DATADIR;
-#else
-            datadir_ = g_pathToDataFolder;
-#endif
 			const std::string err = checkdatadirversion(datadir_);
 			if (err.empty()) {
 				found_datadir = true;
 			} else {
 				wrong_candidates.emplace_back(datadir_, err);
 			}
+#else
+            datadir_ = g_pathToDataFolder;
+            found_datadir = true;
+#endif
 		}
 
 		if (!found_datadir) {

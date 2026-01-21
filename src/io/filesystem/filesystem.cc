@@ -60,6 +60,10 @@
 #define PATH_MAX MAX_PATH
 #endif
 
+#if ANDROID
+extern std::string g_pathToRootUserFolder;
+#endif
+
 /* Quickfix for bug https://github.com/widelands/widelands/issues/5614:
  * Most systems specify PATH_MAX to be the maximum number of characters in a file path.
  * Systems without a limit (or which don't care about standards) may neglect to define this symbol.
@@ -233,10 +237,14 @@ std::string FileSystem::get_homedir() {
 
 	log_warn("None of the directories was useable - falling back to \".\"\n");
 #else
+#ifndef ANDROID
 #ifdef HAS_GETENV
 	if (char const* const h = getenv("HOME")) {
 		homedir = h;
 	}
+#endif
+#else
+    homedir = g_pathToRootUserFolder;
 #endif
 #endif
 
