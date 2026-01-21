@@ -223,7 +223,8 @@ endif ()
     endif()
 
     if (ANDROID)
-      target_link_libraries(${NAME} log)
+      wl_include_system_directories(${NAME} ${GLOB_INCLUDE_DIR})
+      target_link_libraries(${NAME} ${GLOB_LIBRARY} log )
     endif ()
 
   foreach(DEPENDENCY ${ARG_DEPENDS})
