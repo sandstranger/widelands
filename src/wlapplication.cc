@@ -450,6 +450,11 @@ WLApplication::WLApplication(int const argc, char const* const* const argv)
 		int handled = 0;
 
 		while (SDL_PollEvent(&ev) != 0) {
+#if ANDROID
+            if (ev.type == SDL_WINDOWEVENT_SIZE_CHANGED){
+                g_gr->resolution_changed();
+            }
+#endif
 			if (ev.type == SDL_WINDOWEVENT) {
 				handle_window_event(ev);
 				++handled;
@@ -1111,6 +1116,7 @@ bool WLApplication::poll_event(SDL_Event& ev) const {
 void WLApplication::handle_window_event(SDL_Event& ev) {
 	assert(ev.type == SDL_WINDOWEVENT);
 	switch (ev.window.event) {
+#ifndef ANDROID
 	case SDL_WINDOWEVENT_RESIZED:
 		// Do not save the new size to config at this point to avoid saving sizes that
 		// result from maximization etc. Save at shutdown instead.
@@ -1118,6 +1124,7 @@ void WLApplication::handle_window_event(SDL_Event& ev) {
 			g_gr->change_resolution(ev.window.data1, ev.window.data2, false);
 		}
 		break;
+#endif
 	case SDL_WINDOWEVENT_MAXIMIZED:
 		set_config_bool("maximized", true);
 		break;

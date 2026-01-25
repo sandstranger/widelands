@@ -79,6 +79,7 @@ public:
 
 	RenderTarget* get_render_target();
 	void refresh();
+    void resolution_changed();
 	[[nodiscard]] SDL_Window* get_sdlwindow() const {
 		return sdl_window_;
 	}
@@ -94,9 +95,6 @@ private:
 
 	// Set the window size. Use this instead of calling SDL_SetWindowSize directly.
 	void set_window_size(int w, int h);
-
-	// Called when the resolution (might) have changed.
-	void resolution_changed();
 
 	// The height & width of the window should we be in window mode.
 	int window_mode_width_ = 0;

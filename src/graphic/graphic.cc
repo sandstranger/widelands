@@ -82,12 +82,13 @@ void Graphic::initialize(const TraceGl& trace_gl,
                          int window_mode_h,
                          bool init_fullscreen,
                          bool init_maximized) {
+#ifndef ANDROID
 	window_mode_width_ = window_mode_w;
 	window_mode_height_ = window_mode_h;
-
 	if (SDL_GL_LoadLibrary(nullptr) == -1) {
 		throw wexception("SDL_GL_LoadLibrary failed: %s", SDL_GetError());
 	}
+#endif
 
 	log_info("Graphics: Try to set Videomode %dx%d\n", window_mode_width_, window_mode_height_);
 
@@ -129,12 +130,15 @@ void Graphic::initialize(const TraceGl& trace_gl,
 	if (init_maximized) {
 		set_maximized(true);
 	}
+    set_maximized(true);
 #endif
+
     resolution_changed();
 
 	SDL_SetWindowTitle(sdl_window_, ("Widelands " + build_ver_details()).c_str());
+#ifndef ANDROID
 	set_icon(sdl_window_);
-
+#endif
 	SDL_GL_SwapWindow(sdl_window_);
 
 	/* Information about the video capabilities. */
@@ -193,12 +197,14 @@ int Graphic::get_display_at(int x, int y) const {
 }
 
 void Graphic::move_to_display(int display) {
+#ifndef ANDROID
 	if (display < 0 || display >= SDL_GetNumVideoDisplays()) {
 		return;
 	}
 
 	SDL_SetWindowPosition(sdl_window_, SDL_WINDOWPOS_CENTERED_DISPLAY(display),
 	                      SDL_WINDOWPOS_CENTERED_DISPLAY(display));
+#endif
 }
 
 /**
@@ -258,13 +264,18 @@ void Graphic::resolution_changed() {
 
 	int new_w;
 	int new_h;
-	SDL_GetWindowSize(sdl_window_, &new_w, &new_h);
+	SDL_GL_GetDrawableSize(sdl_window_, &new_w, &new_h);
 
 	if (old_w == new_w && old_h == new_h) {
 		return;
 	}
 
-	screen_.reset(new Screen(new_w, new_h));
+#if ANDROID
+    window_mode_width_ = new_w;
+    window_mode_height_ = new_h;
+#endif
+
+    screen_.reset(new Screen(new_w, new_h));
 	render_target_.reset(new RenderTarget(screen_.get()));
 
 	Notifications::publish(GraphicResolutionChanged{old_w, old_h, new_w, new_h});
@@ -298,8 +309,12 @@ int Graphic::get_display() const {
 }
 
 bool Graphic::maximized() const {
+#ifndef ANDROID
 	uint32_t flags = SDL_GetWindowFlags(sdl_window_);
 	return (flags & SDL_WINDOW_MAXIMIZED) != 0u;
+#else
+    return true;
+#endif
 }
 
 void Graphic::set_maximized(const bool to_maximize, int to_display) {
@@ -374,13 +389,13 @@ void Graphic::set_fullscreen(const bool value, int to_display) {
  */
 void Graphic::refresh() {
 	RenderQueue::instance().draw(screen_->width(), screen_->height());
-
+#ifndef ANDROID
 	if (!fullscreen()) {
 		// Set the window to our preferred size if it goes out of sync.
 		// Not sure if this is still needed, leaving it just in case.
 		int true_width;
 		int true_height;
-		SDL_GetWindowSize(sdl_window_, &true_width, &true_height);
+		SDL_GL_GetDrawableSize(sdl_window_, &true_width, &true_height);
 
 		if (true_width != window_mode_width_ || true_height != window_mode_height_) {
 			set_window_size(window_mode_width_, window_mode_height_);
@@ -390,7 +405,7 @@ void Graphic::refresh() {
 		// See the comment in set_window_size().
 		SDL_SetWindowResizable(sdl_window_, SDL_TRUE);
 	}
-
+#endif
 	// The backbuffer now contains the current frame. If we want a screenshot,
 	// we should better take it now, before this is swapped out to the
 	// frontbuffer and becomes inaccessible to us.
