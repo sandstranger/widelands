@@ -963,7 +963,11 @@ OptionsCtrl::OptionsStruct OptionsCtrl::options_struct(uint32_t active_tab) {
 	opt.yres = opt_section_.get_int("yres", kDefaultResolutionH);
 	opt.maximized = opt_section_.get_bool("maximized", false);
 	opt.fullscreen = opt_section_.get_bool("fullscreen", false);
+#ifndef ANDROID
 	opt.sdl_cursor = opt_section_.get_bool("sdl_cursor", true);
+#else
+    opt.sdl_cursor = opt_section_.get_bool("sdl_cursor", false);
+#endif
 	opt.tooltip_accessibility_mode = opt_section_.get_bool("tooltip_accessibility_mode", false);
 
 	// Window options

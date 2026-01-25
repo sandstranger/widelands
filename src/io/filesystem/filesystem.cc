@@ -270,6 +270,7 @@ std::string FileSystem::get_homedir() {
 std::string FileSystem::get_userdatadir() {
 	std::string userdatadir = get_homedir();
 
+#ifndef ANDROID
 	// Use dotfolder for backwards compatibility if it exists.
 	RealFSImpl dot(userdatadir);
 	if (dot.is_directory(".widelands")) {
@@ -290,7 +291,9 @@ std::string FileSystem::get_userdatadir() {
 		userdatadir = userdatadir + "/.widelands";
 	}
 #endif
-
+#else
+    userdatadir = userdatadir + "/widelands";
+#endif
 	// Unlike the homedir function, this function includes the program name.
 	// This is handled in 'src/wlapplication.cc'.
 	return userdatadir;
@@ -304,6 +307,7 @@ std::string FileSystem::get_userdatadir() {
 std::string FileSystem::get_userconfigdir() {
 	std::string userconfigdir = get_homedir();
 
+#ifndef ANDROID
 	// Use dotfolder for backwards compatibility if it exists.
 	RealFSImpl dot(userconfigdir);
 	if (dot.is_directory(".widelands")) {
@@ -324,7 +328,9 @@ std::string FileSystem::get_userconfigdir() {
 		userconfigdir = userconfigdir + "/.widelands";
 	}
 #endif
-
+#else
+    userconfigdir = userconfigdir + "/widelands";
+#endif
 	// Unlike the homedir function, this function includes the program name.
 	// This is handled in 'src/wlapplication.cc'.
 	return userconfigdir;
@@ -336,6 +342,7 @@ std::string FileSystem::get_userconfigdir() {
  */
 std::vector<std::string> FileSystem::get_xdgdatadirs() {
 	std::vector<std::string> xdgdatadirs;
+#ifndef ANDROID
 	const char* environment_char = nullptr;
 #ifdef HAS_GETENV
 	environment_char = getenv("XDG_DATA_DIRS");
@@ -354,6 +361,9 @@ std::vector<std::string> FileSystem::get_xdgdatadirs() {
 		environment.erase(0, pos + delimiter.length());
 	}
 	xdgdatadirs.push_back(environment);
+#else
+    xdgdatadirs.push_back(get_homedir());
+#endif
 	return xdgdatadirs;
 }
 #endif
