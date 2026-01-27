@@ -88,6 +88,11 @@ void Graphic::initialize(const TraceGl& trace_gl,
 	if (SDL_GL_LoadLibrary(nullptr) == -1) {
 		throw wexception("SDL_GL_LoadLibrary failed: %s", SDL_GetError());
 	}
+#else
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+    SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "1");
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
 #endif
 
 	log_info("Graphics: Try to set Videomode %dx%d\n", window_mode_width_, window_mode_height_);
@@ -265,14 +270,19 @@ void Graphic::resolution_changed() {
 	int new_w;
 	int new_h;
 	SDL_GL_GetDrawableSize(sdl_window_, &new_w, &new_h);
-
+#ifndef ANDROID
 	if (old_w == new_w && old_h == new_h) {
+#else
+    if (window_mode_width_ == new_w && window_mode_height_ == new_h) {
+#endif
 		return;
 	}
 
 #if ANDROID
     window_mode_width_ = new_w;
     window_mode_height_ = new_h;
+    new_w /=2.0f;
+    new_h /=2.0f;
 #endif
 
     screen_.reset(new Screen(new_w, new_h));
@@ -388,8 +398,11 @@ void Graphic::set_fullscreen(const bool value, int to_display) {
  * Bring the screen uptodate.
  */
 void Graphic::refresh() {
-	RenderQueue::instance().draw(screen_->width(), screen_->height());
-#ifndef ANDROID
+#if ANDROID
+	RenderQueue::instance().draw(window_mode_width_, window_mode_height_);
+#else
+    RenderQueue::instance().draw(screen_->width(), screen_->height());
+
 	if (!fullscreen()) {
 		// Set the window to our preferred size if it goes out of sync.
 		// Not sure if this is still needed, leaving it just in case.
