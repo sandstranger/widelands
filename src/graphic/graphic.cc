@@ -49,7 +49,15 @@
 #endif
 
 Graphic* g_gr;
-
+#if ANDROID
+float g_screen_scale = 2.0f;
+extern "C" {
+    __attribute__((used)) __attribute__((visibility("default")))
+    void set_screen_scale(const float screen_scale) {
+        g_screen_scale = screen_scale;
+    }
+}
+#endif
 namespace {
 
 // Sets the icon for the application.
@@ -281,8 +289,8 @@ void Graphic::resolution_changed() {
 #if ANDROID
     window_mode_width_ = new_w;
     window_mode_height_ = new_h;
-    new_w /=2.0f;
-    new_h /=2.0f;
+    new_w /=g_screen_scale;
+    new_h /=g_screen_scale;
 #endif
 
     screen_.reset(new Screen(new_w, new_h));

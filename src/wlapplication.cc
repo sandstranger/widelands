@@ -459,7 +459,11 @@ WLApplication::WLApplication(int const argc, char const* const* const argv)
 				handle_window_event(ev);
 				++handled;
 			} else if (ev.type == SDL_MOUSEMOTION) {
-				mouse_position_ = Vector2i(ev.motion.x, ev.motion.y);
+#if ANDROID
+                mouse_position_ = Vector2i(ev.motion.x / g_screen_scale, ev.motion.y / g_screen_scale);
+#else
+                mouse_position_ = Vector2i(ev.motion.x, ev.motion.y);
+#endif
 			} else {
 				verb_log_dbg("Ignoring SDL event 0x%04x", ev.type);
 				++ignored;
@@ -1217,13 +1221,22 @@ void WLApplication::handle_input(InputCallback const* cb) {
 			}
 			break;
 		case SDL_MOUSEMOTION:
-			mouse_position_ = Vector2i(ev.motion.x, ev.motion.y);
-
+#if ANDROID
+			mouse_position_ = Vector2i(ev.motion.x / g_screen_scale, ev.motion.y / g_screen_scale);
+            if (((ev.motion.xrel != 0) || (ev.motion.yrel != 0)) && (cb != nullptr) &&
+            (cb->mouse_move != nullptr)) {
+                cb->mouse_move(
+                        ev.motion.state, ev.motion.x/ g_screen_scale ,
+                        ev.motion.y / g_screen_scale, ev.motion.xrel / g_screen_scale, ev.motion.yrel / g_screen_scale);
+            }
+#else
+            mouse_position_ = Vector2i(ev.motion.x, ev.motion.y);
 			if (((ev.motion.xrel != 0) || (ev.motion.yrel != 0)) && (cb != nullptr) &&
 			    (cb->mouse_move != nullptr)) {
 				cb->mouse_move(
 				   ev.motion.state, ev.motion.x, ev.motion.y, ev.motion.xrel, ev.motion.yrel);
 			}
+#endif
 			break;
 		case SDL_WINDOWEVENT:
 			handle_window_event(ev);
@@ -1282,14 +1295,26 @@ void WLApplication::handle_mousebutton(SDL_Event& ev, InputCallback const* cb) {
 #endif
 
 	if (ev.type == SDL_MOUSEBUTTONDOWN && (cb != nullptr) && (cb->mouse_press != nullptr)) {
-		cb->mouse_press(ev.button.button, ev.button.x, ev.button.y);
+#if ANDROID
+		cb->mouse_press(ev.button.button, ev.button.x / g_screen_scale, ev.button.y / g_screen_scale);
+#else
+        cb->mouse_press(ev.button.button, ev.button.x, ev.button.y);
+#endif
 	} else if (ev.type == SDL_MOUSEBUTTONUP) {
 		if ((cb != nullptr) && (cb->mouse_release != nullptr)) {
 			if (ev.button.button == SDL_BUTTON_MIDDLE && faking_middle_mouse_button_) {
-				cb->mouse_release(SDL_BUTTON_LEFT, ev.button.x, ev.button.y);
+#if ANDROID
+				cb->mouse_release(SDL_BUTTON_LEFT, ev.button.x / g_screen_scale, ev.button.y / g_screen_scale);
+#else
+                cb->mouse_release(SDL_BUTTON_LEFT, ev.button.x, ev.button.y);
+#endif
 				faking_middle_mouse_button_ = false;
 			}
-			cb->mouse_release(ev.button.button, ev.button.x, ev.button.y);
+#if ANDROID
+			cb->mouse_release(ev.button.button, ev.button.x / g_screen_scale, ev.button.y / g_screen_scale);
+#else
+            cb->mouse_release(ev.button.button, ev.button.x, ev.button.y);
+#endif
 		}
 	}
 }

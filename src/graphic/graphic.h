@@ -31,6 +31,7 @@
 
 class RenderTarget;
 class Screen;
+extern float g_screen_scale;
 
 // A graphics card must at least support this size for texture for Widelands to
 // run.

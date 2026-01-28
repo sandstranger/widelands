@@ -338,16 +338,6 @@ SDL_GLContext initialize(
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
-#if ANDROID
-    glDisable(GL_LINE_SMOOTH);
-    glDisable(GL_POLYGON_SMOOTH);
-    glDisable(GL_MULTISAMPLE);
-    glDisable(GL_SMOOTH);
-    glBindTexture(GL_TEXTURE_2D, 1);
-    glHint(GL_GENERATE_MIPMAP_HINT, GL_FASTEST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-#endif
 	return gl_context;
 }
 
