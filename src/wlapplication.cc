@@ -1326,7 +1326,10 @@ void WLApplication::warp_mouse(const Vector2i position) {
 	mouse_position_ = position;
 	Vector2i cur_position = Vector2i::zero();
 	SDL_GetMouseState(&cur_position.x, &cur_position.y);
-
+#if ANDROID
+    cur_position.x /= g_screen_scale;
+    cur_position.y /= g_screen_scale;
+#endif
 	if (cur_position != position) {
 		SDL_Window* sdl_window = g_gr->get_sdlwindow();
 		if (sdl_window != nullptr) {
@@ -1336,7 +1339,12 @@ void WLApplication::warp_mouse(const Vector2i position) {
 				   [sdl_window, position]() {
 					   SDL_PumpEvents();
 					   SDL_FlushEvent(SDL_MOUSEMOTION);
-					   SDL_WarpMouseInWindow(sdl_window, position.x, position.y);
+#if ANDROID
+					   SDL_WarpMouseInWindow(sdl_window, position.x * g_screen_scale,
+                                             position.y * g_screen_scale);
+#else
+                       SDL_WarpMouseInWindow(sdl_window, position.x, position.y);
+#endif
 				   },
 				   true);
 				return;
