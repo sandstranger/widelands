@@ -33,6 +33,18 @@
 #include "wlapplication_options.h"
 #include "wui/mapviewpixelfunctions.h"
 
+#if ANDROID
+static bool screen_controls_active = true;
+extern bool is_painting_mode_active;
+
+extern "C"{
+    __attribute__((used)) __attribute__((visibility("default")))
+    void set_screen_controls_state(const bool active) {
+    screen_controls_active = active;
+    }
+}
+#endif
+
 namespace {
 
 // Number of keyframes to generate for a plan. The more points, the smoother
@@ -61,19 +73,6 @@ constexpr float kPanOnlyZoomThreshold = 0.25f;
 // If the target is less than this many screens at the current zoom level away,
 // we will do a pan-only movement.
 constexpr float kPanOnlyDistanceThreshold = 2.0f;
-
-#if ANDROID
-static bool screen_controls_active = true;
-extern bool is_painting_mode_active;
-
-extern "C"{
-    __attribute__((used)) __attribute__((visibility("default")))
-    void set_screen_controls_state(const bool active) {
-        screen_controls_active = active;
-    }
-}
-
-#endif
 
 // Returns the view area, i.e. the currently visible rectangle in map pixel
 // space for the given 'view'.
