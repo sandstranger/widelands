@@ -62,6 +62,19 @@ constexpr float kPanOnlyZoomThreshold = 0.25f;
 // we will do a pan-only movement.
 constexpr float kPanOnlyDistanceThreshold = 2.0f;
 
+#if ANDROID
+static bool screen_controls_active = true;
+extern bool is_painting_mode_active;
+
+extern "C"{
+    __attribute__((used)) __attribute__((visibility("default")))
+    void set_screen_controls_state(const bool active) {
+        screen_controls_active = active;
+    }
+}
+
+#endif
+
 // Returns the view area, i.e. the currently visible rectangle in map pixel
 // space for the given 'view'.
 Rectf get_view_area(const MapView::View& view, const int width, const int height) {
@@ -516,7 +529,7 @@ void MapView::stop_dragging() {
 	}
 }
 
-bool MapView::handle_mousepress(uint8_t const btn, int32_t const x, int32_t const y) {
+bool MapView::handle_mousepress_(uint8_t const btn, int32_t const x, int32_t const y) {
 	if (btn == SDL_BUTTON_LEFT) {
 		stop_dragging();
 		const auto node_and_triangle = track_sel(Vector2i(x, y));
@@ -534,12 +547,71 @@ bool MapView::handle_mousepress(uint8_t const btn, int32_t const x, int32_t cons
 	return false;
 }
 
-bool MapView::handle_mouserelease(const uint8_t btn, int32_t /*x*/, int32_t /*y*/) {
-	if (btn == SDL_BUTTON_RIGHT && dragging_) {
-		stop_dragging();
-		return true;
-	}
-	return false;
+#if ANDROID
+bool MapView::handle_touchpress(uint8_t const btn, int32_t const x, int32_t const y){
+    if (btn == SDL_BUTTON_LEFT) {
+        stop_dragging();
+        left_down_candidate_ = true;
+        left_moved_ = false;
+        left_down_x_ = x;
+        left_down_y_ = y;
+    }
+    if (btn == SDL_BUTTON_RIGHT) {
+        jump();
+        dragging_ = true;
+        grab_mouse(true);
+        WLApplication::get().set_mouse_lock(true);
+        left_down_candidate_ = false;
+        left_moved_ = false;
+        return true;
+    }
+    return false;
+}
+
+bool MapView::handle_touchrelease(const uint8_t btn, int32_t const x, int32_t const y){
+    if (btn == SDL_BUTTON_LEFT) {
+        if (left_down_candidate_ && !left_moved_) {
+            const auto node_and_triangle = track_sel(Vector2i(x, y));
+            field_clicked(node_and_triangle);
+        }
+        left_down_candidate_ = false;
+        left_moved_ = false;
+        return false;
+    }
+
+    if (btn == SDL_BUTTON_RIGHT && dragging_) {
+        stop_dragging();
+        return true;
+    }
+    return false;
+}
+
+#endif
+
+bool MapView::handle_mousepress(uint8_t const btn, int32_t const x, int32_t const y) {
+#if ANDROID
+    return screen_controls_active && !is_painting_mode_active ? handle_touchpress(btn,x, y) :
+        handle_mousepress_(btn, x, y);
+#else
+    return handle_mousepress_(btn, x, y);
+#endif
+}
+
+bool MapView::handle_mouserelease_(const uint8_t btn, int32_t /*x*/, int32_t /*y*/){
+    if (btn == SDL_BUTTON_RIGHT && dragging_) {
+        stop_dragging();
+        return true;
+    }
+    return false;
+}
+
+bool MapView::handle_mouserelease(const uint8_t btn, int32_t const x, int32_t const y) {
+#if ANDROID
+    return screen_controls_active && !is_painting_mode_active ? handle_touchrelease(btn,x, y) :
+        handle_mouserelease_(btn,x,y);
+#else
+    return handle_mouserelease_(btn,x,y);
+#endif
 }
 
 constexpr int16_t kEdgeScrollingMargin = 40;
@@ -551,6 +623,16 @@ bool MapView::handle_mousemove(
    uint8_t const state, int32_t x, int32_t y, int32_t xdiff, int32_t ydiff) {
 	last_mouse_pos_.x = x;
 	last_mouse_pos_.y = y;
+
+#if ANDROID
+    if (screen_controls_active && !is_painting_mode_active && left_down_candidate_) {
+        int dx = x - left_down_x_;
+        int dy = y - left_down_y_;
+        if (dx*dx + dy*dy > MOVE_THRESHOLD * MOVE_THRESHOLD) {
+            left_moved_ = true;
+        }
+    }
+#endif
 
 	if (dragging_) {
 		if ((state & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0) {

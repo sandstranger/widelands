@@ -84,6 +84,9 @@
 #include "wui/toolbar.h"
 
 const std::string kEditorSplashImage("loadscreens/editor.jpg");
+#if ANDROID
+bool is_painting_mode_active = false;
+#endif
 
 EditorInteractive::EditorInteractive(Widelands::EditorGameBase& e)
    : InteractiveBase(e, get_config_section(), nullptr),
@@ -615,6 +618,9 @@ void EditorInteractive::cleanup_for_load() {
 /// Called just before the editor starts, after postload, init and gfxload.
 void EditorInteractive::start() {
 	// Run the editor initialization script, if any
+#if ANDROID
+    is_painting_mode_active = true;
+#endif
 	try {
 		g_sh->change_music(Songset::kIngame, 1000);
 		egbase().lua().run_script("map:scripting/editor_init.lua");
@@ -644,6 +650,9 @@ void EditorInteractive::think() {
 }
 
 void EditorInteractive::exit(const bool force) {
+#if ANDROID
+    is_painting_mode_active = false;
+#endif
 	if (!force) {
 		UI::WLMessageBox mmb(
 		   this, UI::WindowStyle::kWui, need_save_ ? _("Unsaved Map") : _("Exit Editor Confirmation"),

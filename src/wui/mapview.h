@@ -245,6 +245,18 @@ private:
 	// The queue of plans to execute as animations.
 	std::deque<std::deque<TimestampedView>> view_plans_;
 	std::deque<std::deque<TimestampedMouse>> mouse_plans_;
+    bool handle_mousepress_(uint8_t const btn, int32_t const x, int32_t const y);
+    bool handle_mouserelease_(const uint8_t btn, int32_t /*x*/, int32_t /*y*/);
+#if ANDROID
+    bool left_down_candidate_ = false;
+    bool left_moved_ = false;
+    int32_t left_down_x_ = 0;
+    int32_t left_down_y_ = 0;
+    static constexpr int MOVE_THRESHOLD = 8;
+    bool handle_touchpress(uint8_t const btn, int32_t const x, int32_t const y);
+    bool handle_touchrelease(const uint8_t btn, int32_t const x, int32_t const y);
+#endif
+
 };
 
 #endif  // end of include guard: WL_WUI_MAPVIEW_H
