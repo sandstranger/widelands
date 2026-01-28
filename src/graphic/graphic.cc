@@ -322,7 +322,11 @@ int Graphic::get_display() const {
 	int w;
 	int h;
 	SDL_GetWindowPosition(sdl_window_, &x, &y);
-	SDL_GetWindowSize(sdl_window_, &w, &h);
+#if ANDROID
+	SDL_GL_GetDrawableSize(sdl_window_, &w, &h);
+#else
+    SDL_GetWindowSize(sdl_window_, &w, &h);
+#endif
 	return get_display_at(x + w / 2, y + h / 2);
 }
 

@@ -30,6 +30,9 @@
 #include "graphic/gl/road_program.h"
 #include "graphic/gl/terrain_program.h"
 #include "graphic/gl/workarea_program.h"
+#if ANDROID
+#include "graphic.h"
+#endif
 
 namespace {
 
@@ -141,7 +144,12 @@ private:
 };
 
 ScopedScissor::ScopedScissor(const Rectf& rect) {
-	glScissor(rect.x, rect.y, rect.w, rect.h);
+#if ANDROID
+	glScissor(rect.x * g_screen_scale, rect.y * g_screen_scale,
+              rect.w * g_screen_scale, rect.h * g_screen_scale);
+#else
+    glScissor(rect.x, rect.y, rect.w, rect.h);
+#endif
 	glEnable(GL_SCISSOR_TEST);
 }
 
