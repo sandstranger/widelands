@@ -634,7 +634,11 @@ bool MapView::handle_mousemove(
 #endif
 
 	if (dragging_) {
-		if ((state & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0) {
+#if ANDROID
+        if (((state & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0) || screen_controls_active) {
+#else
+        if ((state & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0) {
+#endif
 			pan_by(Vector2i(invert_movement_ ? -xdiff : xdiff, invert_movement_ ? -ydiff : ydiff),
 			       Transition::Jump);
 		} else {
