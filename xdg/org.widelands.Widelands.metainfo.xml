@@ -203,7 +203,7 @@ Widelands همچنین دارای یک هوش مصنوعی برای به چال�
       Jūs esate mažo klano valdovas. Jūsų užduotis yra statyti nuolat besiplečiančią gyvenvietę. Tuo tarpu, kiekvienas klano narys darys viską, kas jos ar jo galioje, kad  pagamintų kuo daugiau resursų ir pagreitintų jos augimą.
     </p>
     <p xml:lang="lt">
-      Widelands offers a single-player mode with campaigns that tell stories of the tribes and their struggle in the Widelands universe. However, settling really starts when you unite with friends over the Internet or LAN to build up new empires together – or to crush each other in the dusts of war. Widelands also offers an artificial intelligence to challenge you.
+      „Widelands“ siūlo vieno žaidėjo režimą su kampanijomis, kurios pasakoja istorijas apie gentis ir jų kovą „Widelands“ visatoje. Tačiau tikrasis įsikūrimas prasideda, kai susivienijate su draugais internetu arba vietiniame tinkle, tam, kad kartu kurtumėte naujas imperijas – arba sutriuškintumėte vienas kitą karo dulkėse. „Widelands“ taip pat gali pasiūlyti dirbtinio intelekto mestą iššūkį.
     </p>
     <p xml:lang="ms">
       Anda merupakan pemangku raja di sebuah puak kecil. Anda ditugaskan untuk membangunkan penempatan yang sedang membesar. Setiap ahli puak anda akan berperanan membantu dalam pembangunan puak ini.
@@ -366,6 +366,7 @@ Widelands size yapay zeka ile size meydan okuma tercihini de sunar.
         <li xml:lang="fr"> 
 Version de correction de bugs</li>
         <li xml:lang="hu">Hibajavító kiadás</li>
+        <li xml:lang="it">Versione di correzione di bug</li>
         <li xml:lang="nds">Fehler-Ofhelpens-Publizeren</li>
         <li xml:lang="nl">Bugfix-bericht</li>
         <li xml:lang="nn">Feilrettingsutgåve</li>
@@ -423,11 +424,18 @@ Version de correction de bugs</li>
         <li xml:lang="hu">Sok új lehetőség a bővítményfejlesztők számára</li>
         <li xml:lang="it">Market trading</li>
         <li xml:lang="it">Six new maps added and three old maps removed</li>
-        <li xml:lang="it">Economy districts</li>
+        <li xml:lang="it">Distretti economici</li>
         <li xml:lang="it">Molti miglioramenti all'Enciclopedia dentro alla partita</li>
         <li xml:lang="it">Download website maps as add-ons</li>
         <li xml:lang="it">New visualisation modes in the editor</li>
         <li xml:lang="it">Many new capabilities for add-on developers</li>
+        <li xml:lang="lt">Market trading</li>
+        <li xml:lang="lt">Pridėti šeši nauji žemėlapiai ir pašalinti trys seni</li>
+        <li xml:lang="lt">Ekonominiai rajonai</li>
+        <li xml:lang="lt">Daugelis patabulinimų žaidimo Enciklopedijoje</li>
+        <li xml:lang="lt">Download website maps as add-ons</li>
+        <li xml:lang="lt">New visualisation modes in the editor</li>
+        <li xml:lang="lt">Many new capabilities for add-on developers</li>
         <li xml:lang="nds">Hannel in Markten</li>
         <li xml:lang="nds">Sess neje Kaarten hentoföögt un dree olle Kaarten wegdaan</li>
         <li xml:lang="nds">Weertskupp-Distrikten</li>
@@ -622,6 +630,8 @@ Version de correction de bugs</li>
     <name xml:lang="de">Das Widelands-Entwicklungsteam</name>
     <name xml:lang="fr">L'équipe de développement de Widelands</name>
     <name xml:lang="hu">A Widelands fejlesztőcsapat</name>
+    <name xml:lang="it">Il team di sviluppo di Widelands</name>
+    <name xml:lang="lt">The Videlands kūrėjų komanda</name>
     <name xml:lang="nds">De Widelands Entwickeln-Klottje</name>
     <name xml:lang="nl">Het Widelands Ontwikkeling Team</name>
     <name xml:lang="nn">Widelands utviklarlag</name>
