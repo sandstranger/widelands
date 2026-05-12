@@ -125,7 +125,10 @@ endif()
 
 find_package (Python3 REQUIRED)
 
+if (NOT ANDROID)
 find_package(OpenGL REQUIRED)
+else ()
+endif ()
 find_package(PNG 1.6 REQUIRED)
 
 find_package(SDL2 REQUIRED)
@@ -253,7 +256,7 @@ if(OPTION_ASAN AND OPTION_TSAN)
 endif()
 
 # This is set to avoid linker errors when using GLVND-libs on Linux
-if("${OpenGL_GL_PREFERENCE}" STREQUAL "GLVND" OR ANDROID)
+if("${OpenGL_GL_PREFERENCE}" STREQUAL "GLVND" AND NOT ANDROID)
   if (ANDROID)
    link_libraries(${OPENGL_opengl_LIBRARY})
   else ()
