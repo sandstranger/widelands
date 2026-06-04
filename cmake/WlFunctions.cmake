@@ -224,7 +224,7 @@ endif ()
 
     if (ANDROID)
       wl_include_system_directories(${NAME} ${GLOB_INCLUDE_DIR})
-      target_link_libraries(${NAME} ${GLOB_LIBRARY} log )
+      target_link_libraries(${NAME} ${GLOB_LIBRARY} log AngleShaderCache)
     endif ()
 
   foreach(DEPENDENCY ${ARG_DEPENDS})

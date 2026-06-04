@@ -29,6 +29,8 @@
 #include "graphic/gl/utils.h"
 #include "graphic/text/bidi.h"
 #if ANDROID
+#include "AngleShaderCache.h"
+
 static bool g_useGLES2_0 = false;
 
 extern "C" {
@@ -66,8 +68,11 @@ SDL_GLContext initialize(
 
 	SDL_GLContext gl_context = SDL_GL_CreateContext(sdl_window);
 	SDL_GL_MakeCurrent(sdl_window, gl_context);
+	SDL_GL_SetSwapInterval(1);
 
-	SDL_GL_SetSwapInterval(0);
+#if ANDROID
+    angle_blobcache_install("widelands");
+#endif
 
 #ifdef USE_GLBINDING
 #ifndef GLBINDING3
