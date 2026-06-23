@@ -43,6 +43,9 @@
 #include "io/filesystem/layered_filesystem.h"
 #include "io/streamwrite.h"
 #include "notifications/notifications.h"
+#ifdef ANDROID
+#include "SwappyController.h"
+#endif
 
 #ifndef RESIZABLE_WINDOW
 #define SDL_SetWindowResizable(window, resizable)
@@ -150,8 +153,13 @@ void Graphic::initialize(const TraceGl& trace_gl,
 #ifndef ANDROID
 	set_icon(sdl_window_);
 #endif
-	SDL_GL_SwapWindow(sdl_window_);
-
+#ifndef ANDROID
+    SDL_GL_SwapWindow(sdl_window_);
+#else
+    if (!SwappySwapBuffers()) {
+        SDL_GL_SwapWindow(sdl_window_);
+    }
+#endif
 	/* Information about the video capabilities. */
 	const char* drv = SDL_GetCurrentVideoDriver();
 	log_info("**** GRAPHICS REPORT ****\n");
@@ -439,6 +447,12 @@ void Graphic::refresh() {
 		save_to_png(screen_->to_texture().get(), sw.get(), ColorType::RGB);
 		screenshot_filename_.clear();
 	}
+
+#ifdef ANDROID
+    if (SwappySwapBuffers()) {
+        return;
+    }
+#endif
 
 	SDL_GL_SwapWindow(sdl_window_);
 }

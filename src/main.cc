@@ -46,6 +46,7 @@
 #if ANDROID
 #include "SDL_main.h"
 #include <string>
+#include "SwappyController.h"
 #endif
 
 #if ANDROID
@@ -152,10 +153,15 @@ int main(int argc, char* argv[]) {
 		WLApplication& g_app = WLApplication::get(argc, const_cast<char const**>(argv));
 		// TODO(unknown): handle exceptions from the constructor
 		g_app.run();
-
-		return 0;
+#ifdef ANDROID
+        DestroySwappy();
+#endif
+        return 0;
 	} catch (const ParameterError& e) {
-		//  handle wrong commandline parameters
+#ifdef ANDROID
+        DestroySwappy();
+#endif
+        //  handle wrong commandline parameters
 		show_usage(build_ver_details(), e.level_);
 		if (e.what()[0] != 0) {
 			std::cerr << std::string(60, '=') << std::endl << std::endl << e.what() << std::endl;
