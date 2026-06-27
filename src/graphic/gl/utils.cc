@@ -229,7 +229,9 @@ void State::bind_framebuffer(const GLuint framebuffer, const GLuint texture) {
 	// Some graphic drivers inaccurately do not flush their pipeline when
 	// switching the framebuffer - and happily do draw calls into the wrong
 	// framebuffers. I AM LOOKING AT YOU, INTEL!!!
+#ifndef ANDROID	
 	glFlush();
+#endif	
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 	if (framebuffer != 0) {
