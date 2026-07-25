@@ -224,7 +224,7 @@ endif ()
 
     if (ANDROID)
       wl_include_system_directories(${NAME} ${GLOB_INCLUDE_DIR})
-      target_link_libraries(${NAME} ${GLOB_LIBRARY} log AndroidGraphicsLayer)
+      target_link_libraries(${NAME} ${SAFFAL_LIBRARY} ${GLOB_LIBRARY} log AndroidGraphicsLayer)
     endif ()
 
   foreach(DEPENDENCY ${ARG_DEPENDS})
