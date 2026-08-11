@@ -451,12 +451,14 @@ WLApplication::WLApplication(int const argc, char const* const* const argv)
 		int handled = 0;
 
 		while (SDL_PollEvent(&ev) != 0) {
-#if ANDROID
-            if (ev.type == SDL_WINDOWEVENT_SIZE_CHANGED){
+#ifdef ANDROID
+            if (ev.type == SDL_WINDOWEVENT && ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED){
                 g_gr->resolution_changed();
             }
+			else if (ev.type == SDL_WINDOWEVENT) {
+#else
+            if (ev.type == SDL_WINDOWEVENT) {
 #endif
-			if (ev.type == SDL_WINDOWEVENT) {
 				handle_window_event(ev);
 				++handled;
 			} else if (ev.type == SDL_MOUSEMOTION) {
